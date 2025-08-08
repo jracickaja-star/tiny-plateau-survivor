@@ -16,4 +16,6 @@ func _physics_process(delta: float) -> void:
         velocity = velocity.normalized() * speed
     
     # Move the character
-    velocity = move_and_slide(velocity)
+    set_velocity(velocity)
+    move_and_slide()
+    velocity = velocity
