@@ -1,0 +1,77 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.2.1
+          include-templates: true
+          use-dotnet: false
+
+      - name: Create export_presets.cfg
+        run: |
+          cat > export_presets.cfg <<'EOF'
+          [general]
+          export_presets_version=2
+
+          [preset.0]
+          name="Web"
+          platform="HTML5"
+          export_path="build/web/index.html"
+          # Ensure the files are served correctly on GitHub Pages
+          [preset.0.options]
+          filesystem/export_keep_project_files=false
+          EOF
+
+      - name: Export to HTML5
+        run: |
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+
+      - name: Upload preview artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          name: html5-build
+          path: build/web
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: build/web
+          allow_empty_commit: true
+
+      - name: Comment with live preview
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            🚀 A preview of this build is available at: https://jracickaja-star.github.io/tiny-plateau-survivor/
+
+      - name: Comment on commit with live preview
+        if: github.event_name == 'push'
+        uses: peter-evans/commit-comment@v3
+        with:
+          commit: ${{ github.sha }}
+          body: |
+            🚀 The latest build has been deployed: https://jracickaja-star.github.io/tiny-plateau-survivor/
