@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Godot
-        uses: chickensoft-games/setup-godot@v2
+        uses: chickensoft-games/setup-godot@v4
         with:
           version: 4.2.1
           include-templates: true
@@ -28,7 +28,7 @@ jobs:
         run: |
           cat > export_presets.cfg <<'EOF'
           [general]
-          export_presets_version=2
+          export_presets_version=4
 
           [preset.0]
           name="Web"
@@ -46,14 +46,14 @@ jobs:
 
       - name: Upload preview artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: html5-build
           path: build/web
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
@@ -62,7 +62,7 @@ jobs:
 
       - name: Comment with live preview
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -70,7 +70,7 @@ jobs:
 
       - name: Comment on commit with live preview
         if: github.event_name == 'push'
-        uses: peter-evans/commit-comment@v3
+        uses: peter-evans/commit-comment@v4
         with:
           commit: ${{ github.sha }}
           body: |
