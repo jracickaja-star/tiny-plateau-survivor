@@ -2,9 +2,7 @@ name: Build and Deploy (Godot 4 HTML5)
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -12,14 +10,15 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Godot 4
         uses: chickensoft-games/setup-godot@v2
@@ -33,23 +32,15 @@ jobs:
           mkdir -p build/web
           godot --headless --export-release "Web" build/web/index.html
 
-      - name: Upload artifact for PRs
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: build/web/
-          retention-days: 7
-
-      - name: Upload Pages Artifact (main)
-        if: ${{ github.ref == 'refs/heads/main' }}
+      # Only this artifact is needed for Pages:
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: build/web/
+          path: build/web
 
   deploy:
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
