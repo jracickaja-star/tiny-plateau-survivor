@@ -53,9 +53,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/deploy-pages@v4
-YAML
-
-# 3) Commit and push
-git add .github/workflows/build-and-deploy.yml
-git commit -m "ci(pages): add clean Godot 4 HTML5 workflow"
-git push -u origin main
