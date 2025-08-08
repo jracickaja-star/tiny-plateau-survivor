@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://src/Player.tscn" id=1]
+[ext_resource type="PackedScene" path="res://src/Tree.tscn" id=2]
+
+[node name="Main" type="Node2D"]
+
+[node name="TileMap" type="TileMap" parent="."]
+# Placeholder tilemap: 10×10 grid (to be configured in the editor)
+
+[node name="Player" parent="." instance=ExtResource(1)]
+
+[node name="Tree" parent="." instance=ExtResource(2)]
