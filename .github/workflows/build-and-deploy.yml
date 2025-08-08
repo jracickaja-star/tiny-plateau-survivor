@@ -23,7 +23,7 @@ jobs:
 
       # Download Godot 4 headless + export templates
       - name: Setup Godot 4
-        uses: chickensoft-games/setup-godot@v2
+        uses: chickensoft-games/setup-godot@v4
         with:
           version: "4.2.2"     # or your installed minor; 4.3 works too
           use-dotnet: false
