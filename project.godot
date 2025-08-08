@@ -1,0 +1,10 @@
+; Engine configuration file for Godot Engine v4.x.
+config_version=4
+
+[application]
+config/name="Tiny Plateau Survivor"
+run/main_scene="res://src/Main.tscn"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
