@@ -1,0 +1,7 @@
+{
+  "fire_burn_rate": 20,
+  "tree_regrow_day": 20,
+  "tree_regrow_night": 60,
+  "day_length": 60,
+  "night_length": 60
+}
