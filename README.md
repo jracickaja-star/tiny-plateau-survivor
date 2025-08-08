@@ -36,3 +36,33 @@ cd tiny-plateau-survivor
 /src          → Godot scenes (.tscn) and scripts (.gd)
 /build        → compiled exports
 ```
+
+## Installation (Godot 4.x)
+1. Install **Godot 4.x** (latest stable).
+2. Clone this repo and open it in Godot.
+3. The project targets Godot 4.
+
+## Run
+Press **Play** (▶️) in the Godot editor to start `src/Main.tscn`.
+
+## MVP Features
+- **Player movement**: arrow keys/WASD.
+- **Chop trees**: gather wood.
+- **Crate capacity**: limited storage for wood; manage inventory.
+- **Day/Night**: nights are cold and dark.
+- **Fire consumes wood**: staying warm burns your stock.
+- **Night temperature drop & Game Over**: run out of firewood at night → you freeze → game over.
+
+## Folder Structure
+/assets/ - sprites, tiles, audio
+/design/ - docs
+/src/ - scenes (.tscn) & scripts (.gd)
+/build/ - exports
+
+
+## Contributing
+Contributions welcome!
+1. Fork & create a feature branch.
+2. Make changes with clear commits.
+3. Open a PR describing the change.
+
