@@ -1,0 +1,31 @@
+name: Lint structure
+
+on: [push, pull_request]
+
+jobs:
+  check-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required files exist
+        run: |
+          set -e
+          required=(
+            project.godot
+            src/Main.tscn
+            src/Player.tscn
+            src/Player.gd
+            src/Tree.tscn
+            src/Tree.gd
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "Missing: $f"
+              missing=1
+            fi
+          done
+          if [ $missing -ne 0 ]; then
+            echo "Required files missing"
+            exit 1
+          fi
