@@ -2,6 +2,13 @@
 
 A minimal pixelated survival sim on a tiny floating plateau. Chop trees, store wood, light fires, and survive the night.
 
+
+## Play Now
+
+You can play the latest build directly in your browser: [Tiny Plateau Survivor on GitHub Pages](https://jracickaja-star.github.io/tiny-plateau-survivor/)
+
+
+
 ## Installation / Running
 
 1. Install **Godot 4** (use the latest stable release from the official website).  
