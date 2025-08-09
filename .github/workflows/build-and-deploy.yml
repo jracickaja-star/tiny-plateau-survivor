@@ -20,28 +20,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Godot 4.3 + export templates (robust)
+      # Install Godot 4.3 editor (we'll run it headless) + export templates
+      - name: Install Godot 4.3 + export templates (simple & explicit)
         run: |
           set -e
           VER=4.3
           BASE="https://downloads.tuxfamily.org/godotengine/${VER}"
-          # Use the **editor** zip (always present). We'll still run it with --headless.
+
+          # Download editor zip and export templates
           wget -q "${BASE}/Godot_v${VER}-stable_linux.x86_64.zip" -O godot.zip
           wget -q "${BASE}/Godot_v${VER}-stable_export_templates.tpz" -O templates.tpz
 
           mkdir -p "$HOME/godot"
           unzip -q godot.zip -d "$HOME/godot"
 
-          # Install export templates to the standard location for Godot 4.x
+          # The extracted binary name for 4.3 (explicit)
+          GODOT_BIN="$HOME/godot/Godot_v${VER}-stable_linux.x86_64"
+          echo "Godot binary should be at: $GODOT_BIN"
+          ls -la "$HOME/godot"
+          chmod +x "$GODOT_BIN"
+
+          # Install export templates to the standard Godot 4.x path
           mkdir -p "$HOME/.local/share/godot/export_templates/${VER}.stable"
           unzip -q templates.tpz -d "$HOME/.local/share/godot/export_templates/${VER}.stable"
 
-          # Find the extracted binary (name can vary slightly), make it executable, and expose it to later steps
-          GODOT_BIN="$(find "$HOME/godot" -maxdepth 1 -type f -name "Godot_v${VER}-stable_*" | head -n1)"
-          chmod +x "$GODOT_BIN"
+          # Expose for later steps
           echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
-
-          echo "Installed Godot at: $GODOT_BIN"
           "$GODOT_BIN" --version || true
 
       - name: Export HTML5
@@ -52,7 +56,7 @@ jobs:
           "$GODOT_BIN" --headless --export-release "Web" build/web/index.html --verbose
 
       - name: Upload Pages Artifact
-        uses:   actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
 
