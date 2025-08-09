@@ -20,32 +20,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Install Godot 4.3 editor (we'll run it headless) + export templates
-      - name: Install Godot 4.3 + export templates (simple & explicit)
+      # Install Godot 4.3 editor (run headless) + export templates
+      - name: Install Godot 4.3 + export templates (auto-detect)
         run: |
           set -e
           VER=4.3
           BASE="https://downloads.tuxfamily.org/godotengine/${VER}"
 
-          # Download editor zip and export templates
+          # Download editor zip & export templates
           wget -q "${BASE}/Godot_v${VER}-stable_linux.x86_64.zip" -O godot.zip
           wget -q "${BASE}/Godot_v${VER}-stable_export_templates.tpz" -O templates.tpz
 
           mkdir -p "$HOME/godot"
           unzip -q godot.zip -d "$HOME/godot"
 
-          # The extracted binary name for 4.3 (explicit)
-          GODOT_BIN="$HOME/godot/Godot_v${VER}-stable_linux.x86_64"
-          echo "Godot binary should be at: $GODOT_BIN"
+          echo "Contents of $HOME/godot:"
           ls -la "$HOME/godot"
+
+          # Auto-detect extracted binary (filename can vary)
+          GODOT_BIN="$(find "$HOME/godot" -maxdepth 1 -type f -iname "Godot_v${VER}-stable*linux*.x86_64*" -print -quit)"
+          if [ -z "$GODOT_BIN" ]; then
+            echo "ERROR: Could not find Godot binary after unzip."
+            echo "Folder listing again:"
+            ls -la "$HOME/godot"
+            exit 1
+          fi
+
           chmod +x "$GODOT_BIN"
 
-          # Install export templates to the standard Godot 4.x path
+          # Install export templates to standard Godot 4.x path
           mkdir -p "$HOME/.local/share/godot/export_templates/${VER}.stable"
           unzip -q templates.tpz -d "$HOME/.local/share/godot/export_templates/${VER}.stable"
 
-          # Expose for later steps
+          # Expose binary path for later steps
           echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          echo "Using $GODOT_BIN"
           "$GODOT_BIN" --version || true
 
       - name: Export HTML5
