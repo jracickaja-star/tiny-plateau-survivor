@@ -1,52 +1,14 @@
-name: Build and Deploy (Godot 4 HTML5)
+name: Smoke
 
 on:
   push:
     branches: ["main"]
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+    paths:
+      - ".github/workflows/smoke.yml"
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Install Godot 4.3 headless and export templates (no composite actions)
-      - name: Install Godot 4.3 headless + export templates
-        run: |
-          set -e
-          VER=4.3
-          BASE="https://downloads.tuxfamily.org/godotengine/$VER"
-          wget -q "$BASE/Godot_v${VER}-stable_linux.x86_64.headless.zip"
-          wget -q "$BASE/Godot_v${VER}-stable_export_templates.tpz"
-          unzip -q "Godot_v${VER}-stable_linux.x86_64.headless.zip" -d "$HOME/godot"
-          mkdir -p "$HOME/.local/share/godot/export_templates/${VER}.stable"
-          unzip -q "Godot_v${VER}-stable_export_templates.tpz" -d "$HOME/.local/share/godot/export_templates/${VER}.stable"
-          echo "$HOME/godot" >> "$GITHUB_PATH"
-
-      - name: Export HTML5
-        run: |
-          mkdir -p build/web
-          Godot_v4.3-stable_linux.x86_64.headless --headless --export-release "Web" build/web/index.html
-
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: build/web
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-
+      - uses: actions/checkout@v4
+      - run: echo "hello"
