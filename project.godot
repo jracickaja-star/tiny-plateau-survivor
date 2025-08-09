@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Tiny Plateau Survivor!"
+config/name="Tiny Plateau Survivor"
 run/main_scene="res://src/Main.tscn"
 config/features=PackedStringArray("4.4")
 
