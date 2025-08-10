@@ -2,10 +2,7 @@ name: Build and Deploy (Godot 4 HTML5)
 
 on:
   push:
-    branches:
-      - main
-      - codex/fix-godot-install-in-ci-workflow
-      - ci/godot-ci-attempt1
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -24,24 +21,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Godot 4.3 + export templates (verbose & robust)
+      - name: Install Godot 4.3 + export templates (resilient download)
         run: |
           set -euxo pipefail
           VER=4.3
-          BASE="https://downloads.tuxfamily.org/godotengine/${VER}"
+          TUX_BASE="https://downloads.tuxfamily.org/godotengine/${VER}"
+          GH_BASE="https://github.com/godotengine/godot/releases/download/${VER}-stable"
 
-          # Download editor zip & export templates
-          curl -fsSL "${BASE}/Godot_v${VER}-stable_linux.x86_64.zip" -o godot.zip
-          curl -fsSL "${BASE}/Godot_v${VER}-stable_export_templates.tpz" -o templates.tpz
+          fetch() {
+            local url="$1" out="$2"
+            echo "Fetching $url -> $out"
+            curl --fail --location --retry 5 --retry-delay 3 --retry-all-errors -o "$out" "$url"
+          }
 
           mkdir -p "$HOME/godot"
+
+          # Editor zip with fallback
+          if ! fetch "${TUX_BASE}/Godot_v${VER}-stable_linux.x86_64.zip" godot.zip; then
+            fetch "${GH_BASE}/Godot_v${VER}-stable_linux.x86_64.zip" godot.zip
+          fi
+
+          # Export templates with fallback
+          if ! fetch "${TUX_BASE}/Godot_v${VER}-stable_export_templates.tpz" templates.tpz; then
+            fetch "${GH_BASE}/Godot_v${VER}-stable_export_templates.tpz" templates.tpz
+          fi
+
           unzip -v godot.zip || true
           unzip -q godot.zip -d "$HOME/godot"
 
           echo "---- Listing $HOME/godot after unzip ----"
           ls -la "$HOME/godot" || true
 
-          # Try common filenames; then auto‑detect
+          # Detect the binary (filename variations covered)
           CANDIDATES=(
             "$HOME/godot/Godot_v${VER}-stable_linux.x86_64"
             "$HOME/godot/Godot_v${VER}-stable_linux.x86_64.64"
