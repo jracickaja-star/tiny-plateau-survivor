@@ -24,13 +24,13 @@ jobs:
 
       - name: Setup Godot
           uses: chickensoft-games/setup-godot@v2
-      with
+            with:
       
             version: 4.2.1
-          include-templates: true
+                  include-templates: true
 
       - name: Write export presets
-        run: |
+                run: |
           echo "[general]" > export_presets.cfg
           echo "export_presets_version=4" >> export_presets.cfg
           echo "[preset.0]" >> export_presets.cfg
@@ -45,9 +45,9 @@ jobs:
           godot --headless --export-release "Web" build/web/index.html
 
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/web
+          uses: actions/upload-pages-artifact@v3
+          with:
+              path: build/web
 
   deploy:
     needs: build
