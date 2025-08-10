@@ -2,7 +2,11 @@ name: Build and Deploy (Godot 4 HTML5)
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - codex/fix-godot-install-in-ci-workflow
+      - ci/godot-ci-attempt1
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,46 +24,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Install Godot 4.3 editor (run headless) + export templates
-      - name: Install Godot 4.3 + export templates (auto-detect)
+      - name: Install Godot 4.3 + export templates (verbose & robust)
         run: |
-          set -e
+          set -euxo pipefail
           VER=4.3
           BASE="https://downloads.tuxfamily.org/godotengine/${VER}"
 
           # Download editor zip & export templates
-          wget -q "${BASE}/Godot_v${VER}-stable_linux.x86_64.zip" -O godot.zip
-          wget -q "${BASE}/Godot_v${VER}-stable_export_templates.tpz" -O templates.tpz
+          curl -fsSL "${BASE}/Godot_v${VER}-stable_linux.x86_64.zip" -o godot.zip
+          curl -fsSL "${BASE}/Godot_v${VER}-stable_export_templates.tpz" -o templates.tpz
 
           mkdir -p "$HOME/godot"
+          unzip -v godot.zip || true
           unzip -q godot.zip -d "$HOME/godot"
 
-          echo "Contents of $HOME/godot:"
-          ls -la "$HOME/godot"
+          echo "---- Listing $HOME/godot after unzip ----"
+          ls -la "$HOME/godot" || true
 
-          # Auto-detect extracted binary (filename can vary)
-          GODOT_BIN="$(find "$HOME/godot" -maxdepth 1 -type f -iname "Godot_v${VER}-stable*linux*.x86_64*" -print -quit)"
+          # Try common filenames; then auto‑detect
+          CANDIDATES=(
+            "$HOME/godot/Godot_v${VER}-stable_linux.x86_64"
+            "$HOME/godot/Godot_v${VER}-stable_linux.x86_64.64"
+            "$HOME/godot/Godot_v${VER}-stable_x11.64"
+          )
+          GODOT_BIN=""
+          for f in "${CANDIDATES[@]}"; do
+            if [ -f "$f" ]; then GODOT_BIN="$f"; break; fi
+          done
+          if [ -z "$GODOT_BIN" ]; then
+            GODOT_BIN="$(find "$HOME/godot" -maxdepth 1 -type f -iname "Godot_v${VER}-stable*linux*.x86_64*" -print -quit || true)"
+          fi
           if [ -z "$GODOT_BIN" ]; then
             echo "ERROR: Could not find Godot binary after unzip."
-            echo "Folder listing again:"
-            ls -la "$HOME/godot"
             exit 1
           fi
 
           chmod +x "$GODOT_BIN"
+          echo "Using Godot binary at: $GODOT_BIN"
 
-          # Install export templates to standard Godot 4.x path
+          # Install export templates
           mkdir -p "$HOME/.local/share/godot/export_templates/${VER}.stable"
+          unzip -v templates.tpz || true
           unzip -q templates.tpz -d "$HOME/.local/share/godot/export_templates/${VER}.stable"
 
-          # Expose binary path for later steps
+          # Expose for later steps
           echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
-          echo "Using $GODOT_BIN"
           "$GODOT_BIN" --version || true
 
       - name: Export HTML5
         run: |
-          set -e
+          set -euxo pipefail
           mkdir -p build/web
           echo "Using Godot: $GODOT_BIN"
           "$GODOT_BIN" --headless --export-release "Web" build/web/index.html --verbose
