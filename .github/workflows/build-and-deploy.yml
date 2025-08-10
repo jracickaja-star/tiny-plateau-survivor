@@ -22,88 +22,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Godot 4.3 + export templates (fast + resilient)
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v4
+        with:
+          version: 4.3
+          include-templates: true
+
+      - name: Write export presets
         run: |
-          set -euxo pipefail
-          VER=4.3
-          GH_BASE="https://github.com/godotengine/godot/releases/download/${VER}-stable"
-          TUX_BASE="https://downloads.tuxfamily.org/godotengine/${VER}"
-
-          download_with_fallback() {
-            local out="$1"; shift
-            for url in "$@"; do
-              echo "Fetching $url -> $out"
-              if curl -fL --connect-timeout 10 --max-time 60 \
-                       --retry 2 --retry-delay 2 --retry-all-errors \
-                       -o "$out" "$url"; then
-                echo "OK: $url"
-                return 0
-              fi
-              echo "WARN: failed $url, trying next mirror…"
-            done
-            echo "ERROR: all mirrors failed for $out"
-            return 1
-          }
-
-          mkdir -p "$HOME/godot"
-
-          # Prefer GitHub, fall back to TuxFamily
-          download_with_fallback godot.zip \
-            "${GH_BASE}/Godot_v${VER}-stable_linux.x86_64.zip" \
-            "${TUX_BASE}/Godot_v${VER}-stable_linux.x86_64.zip"
-
-          download_with_fallback templates.tpz \
-            "${GH_BASE}/Godot_v${VER}-stable_export_templates.tpz" \
-            "${TUX_BASE}/Godot_v${VER}-stable_export_templates.tpz"
-
-          unzip -q godot.zip -d "$HOME/godot"
-
-          # Install export templates
-          TEMPL_DIR="$HOME/.local/share/godot/export_templates/${VER}.stable"
-          mkdir -p "$TEMPL_DIR"
-          unzip -q templates.tpz -d "$TEMPL_DIR"
-
-          # --- Workaround: alias threaded -> nothreads filenames if needed ---
-          if [ -f "$TEMPL_DIR/web_debug.zip" ] && [ ! -f "$TEMPL_DIR/web_nothreads_debug.zip" ]; then
-            cp "$TEMPL_DIR/web_debug.zip" "$TEMPL_DIR/web_nothreads_debug.zip"
-          fi
-          if [ -f "$TEMPL_DIR/web_release.zip" ] && [ ! -f "$TEMPL_DIR/web_nothreads_release.zip" ]; then
-            cp "$TEMPL_DIR/web_release.zip" "$TEMPL_DIR/web_nothreads_release.zip"
-          fi
-          # -------------------------------------------------------------------
-
-          echo "---- Listing $HOME/godot after unzip ----"
-          ls -la "$HOME/godot" || true
-
-          # Detect Godot editor binary (filename variations)
-          CANDIDATES=(
-            "$HOME/godot/Godot_v${VER}-stable_linux.x86_64"
-            "$HOME/godot/Godot_v${VER}-stable_linux.x86_64.64"
-            "$HOME/godot/Godot_v${VER}-stable_x11.64"
-          )
-          GODOT_BIN=""
-          for f in "${CANDIDATES[@]}"; do
-            if [ -f "$f" ]; then GODOT_BIN="$f"; break; fi
-          done
-          if [ -z "$GODOT_BIN" ]; then
-            GODOT_BIN="$(find "$HOME/godot" -maxdepth 1 -type f -iname "Godot_v${VER}-stable*linux*.x86_64*" -print -quit || true)"
-          fi
-          if [ -z "$GODOT_BIN" ]; then
-            echo "ERROR: Could not find Godot binary after unzip."
-            exit 1
-          fi
-
-          chmod +x "$GODOT_BIN"
-          echo "Using Godot binary at: $GODOT_BIN"
-          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
-          "$GODOT_BIN" --version || true
+          echo "[general]" > export_presets.cfg
+          echo "export_presets_version=4" >> export_presets.cfg
+          echo "[preset.0]" >> export_presets.cfg
+          echo "name=\"Web\"" >> export_presets.cfg
+          echo "platform=\"HTML5\"" >> export_presets.cfg
+          echo "export_path=\"build/web/index.html\"" >> export_presets.cfg
 
       - name: Export HTML5
         run: |
-          set -e
+          set -euxo pipefail
           mkdir -p build/web
-          echo "Using Godot: $GODOT_BIN"
-          "$GODOT_BIN" --headless --export-release "Web" build/web/index.html --verbose
+          godot --headless --export-release "Web" build/web/index.html
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
